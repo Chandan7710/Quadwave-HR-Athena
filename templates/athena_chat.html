@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <title>Athena Chat</title>
+    <style>
+        #loader{
+            z-index: 90;
+            position: fixed;
+            margin-left: 40%;
+            margin-top: 15%;
+        }
+        .tooltip-inner {
+            background-color: rgb(252, 250, 250) !important; 
+            color: #000000 !important; 
+            border: 1px solid #000000; 
+            box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.25); 
+        }
+        .tooltip-arrow::before {
+            border-width: 5px; 
+            border-bottom-color: #ffffff !important;
+        }
+
+        .bg-img {
+            background: #000 url("{% static 'images/bgimage.png' %}");
+        }
+
+        .main-chat-section {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 70px);
+            padding-bottom: 20px; 
+            position: relative;
+        }
+        .btn-custom-smaller {
+            padding: 0.15rem 0.5rem; 
+            font-size: 0.75rem; 
+            line-height: 0.55;
+            border-radius: 0.2rem;
+        }
+        #user-input-container {
+            margin-top: 20px !important;
+            margin-left: 2%; 
+            margin-right: 2%;
+            margin-bottom: 20px;
+            background-color: var(--color-white);
+            padding: 10px;
+            width: calc(96% - 115px); / Adjusted width /
+            border-radius: 10px;
+            box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.25);
+            max-width: 600px;
+        }
+
+        #user-input {
+            width: calc(100% - 55px);
+            box-sizing: border-box;
+            overflow-y: auto;
+            background-color: var(--color-white);
+            resize: none;
+            border: none;
+            outline: none;
+            height: 44px;
+            padding: 5px;
+        }
+
+        .chat-cards {
+            max-width: 600px;
+           margin-bottom: 20px;   /* Add margin to separate chat cards / */
+            margin-right: 20px;
+        }
+
+        #query-history-container {
+            max-height: 600px; 
+            margin-right: 2%;  /*Adjusted margin  */
+            overflow-y: auto; 
+            flex-grow: 1;
+        }
+
+        .ans {
+            padding: 20px;
+            border-radius: 20px 20px 20px 0px;
+            border: 1px solid var(--box-border-color);
+            background: #6c757d;
+            color: white !important;
+            max-width: 600px;
+            margin-left: 2%; 
+            margin-right: 20px;
+            margin-bottom: 40px;
+            overflow-y: auto;
+            position: relative; 
+            z-index: 1;
+        }
+
+        
+
+        #emailHRForm {
+            position: fixed; 
+            bottom: 60px; 
+            right: 30px; 
+            display: none;
+            max-width: 240px; 
+            padding: 20px;
+            background-color: #6c757d;
+            border-radius: 10px;
+            box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.25);
+        }
+
+        #emailHRBody {
+            width: 100%; 
+            background: #6c757d;
+            border-width: 1px;
+            border-color: black;
+            min-height: 200px !important;
+            margin-top: 13px;
+            box-sizing: border-box;
+            resize: vertical; 
+            margin-bottom: 15px; 
+        }
+
+        #save-history-button {
+            position: fixed; 
+            /*bottom: 63px; // Position the button 20px from the bottom */
+            /*right: 140px; / / Adjust the right value as needed */
+            z-index: 1000; 
+            background-color: #495b6b;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            margin-left:30px;
+        }
+        .top-right-button {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000; 
+        }
+
+        .top-right-button button {
+            background-color: #34567b; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+            transition: background-color 0.3s ease, transform 0.3s ease; 
+        }
+
+        .top-right-button button:hover {
+            background-color: #165a73; 
+            transform: translateY(-2px); 
+        }
+
+        .top-right-button button:active {
+            background-color: #165a73; 
+            transform: translateY(0);
+        }
+
+       </style>
+</head>
+<body>
+   <div class="container-fluid p-0">
+    <div class="d-xl-flex d-lg-flex d-md-flex d-sm-flex d-xs-block">
+        <div class="col bg-color-1 p-0 left-nav">
+            <div class="logo d-flex justify-content-center align-items-center">
+                <a href="https://uat.quadwave.com/service-offring/artificial-intelligence/llama-2/">
+                <img class="img-fluid w-auto" src="{% static 'images/logo.png' %}" alt="no image">
+                </a>
+
+            </div>
+
+            <div class="navbar-expand-lg navbar-expand-md">
+                <div class="offcanvas offcanvas-start mobile-slide bg-color-1 " tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                    <nav class="nav flex-column nav-design">
+
+                        <a href="{% url 'home' %} ">
+                            <div class="nav-link" data-bs-toggle="pill" >Home</div>
+                        </a>
+
+                        <a href="{% url 'athena' %}">
+                            <div class="nav-link active" data-bs-toggle="pill" >Athena Chat</div>
+                        </a>
+
+                        <a href="#">
+                            <div class="nav-link" data-bs-toggle="pill" >Document Summary</div>
+                        </a>
+
+                        <a href="#">
+                            <div class="nav-link" data-bs-toggle="pill" >e-gov Online Assistant</div>
+                        </a>
+
+                        <a href="#">
+                            <div class="nav-link" data-bs-toggle="pill" >e-gov FAQs</div>
+                        </a>
+
+                        <a href="https://uat.quadwave.com/contact-us/">
+                            <div class="nav-link" data-bs-toggle="pill" >Contact Us</div>
+                        </a>
+                        <a href="{%url 'logout'%}">
+                            <div class="nav-link" data-bs-toggle="pill" >Logout</div>
+                        </a
+
+                        
+                    </nav>
+                </div>
+            </div>
+
+        </div>
+
+        
+        <div class="col bg-img chatbot-section p-0">
+
+
+            <div class="col Athena-space d-flex align-items-center">
+                <span class="me-2">Athena HR</span>
+                <button type="button" class="btn btn-info btn-custom-smaller" data-bs-toggle="tooltip" 
+                data-bs-placement="right"
+                 title="Employees can ask HR related questions like Leaves, Policies, etc. and get the simplified answers. Our Gen-AI solution, Athena HR, can interact with you through user friendly UI and Features.">
+                    i
+                </button>
+            </div>
+
+            {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger mt-3" id="message-alert">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="top-right-button">
+                <form action="{% url 'clear_query_history' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" onclick="return confirm('Are you sure you want to clear your chat history?');">
+                        Clear History
+                    </button>
+                </form>
+            </div>
+            
+            <div class="main-chat-section">
+                <div id="query-history-container">
+                    <div id="loader" style="display:none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                          </div>
+                    </div>
+                    <!-- Display recent question-answer pairs last -->
+                    {% for entry in query_history %}
+                        <div class="chat-cards m-auto">
+                            <div class="ques"><p>User: {{ entry.question }}</p></div>
+                            <div class="ans">
+                                <p>{{ entry.answer | safe }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div id="emailHRForm" style="display: none;">
+                    <h5>Compose Email</h5>
+                    <form>
+                        {% csrf_token %}
+                        <button class="close" type="button" onclick="close_email()" >
+                          <img src="{%static 'images/close.png' %}" alt="close Icon" width="10" height="10"></button></h5>
+                        <textarea id="emailHRBody" name="email_hr_body" placeholder="Type your HR message..."></textarea>
+                        <button type="button" id="send-email" onclick="sendEmailHR()" >
+                          <img src="{% static 'images/paper-plane.png' %}" alt="Plane Icon" width="25" height="25"></button>
+                        </form>
+                </div>
+
+                <div class="m-auto" id="user-input-container">
+                  <form action="{% url 'athena' %}" method="post" id="user-input-form">
+                      {% csrf_token %}
+                      <textarea id="user-input" name="user_input" placeholder="Type your message..."></textarea>
+                      <button type="submit" id="submit-button" disabled title="Submit Question">
+                          <i class="fa fa-arrow-up" aria-hidden="true"></i>
+                      </button>
+                      <button type="button" id="save-history-button" onclick="openEmailHRForm()">Email HR</button>
+                  </form>
+              </div>
+
+            </div>
+
+            </div>
+        </div>
+    </div>
+    <script>
+        function openEmailHRForm() {
+            document.getElementById("emailHRForm").style.display = "block";
+        }
+    
+        function close_email() {
+            document.getElementById("emailHRForm").style.display = "none";
+        }
+    
+        function sendEmailHR() {
+            var emailHRBody = document.getElementById("emailHRBody").value;
+            console.log("Email Body:", emailHRBody);
+            if (!document.getElementById("send-email").disabled) {
+                // Disable the button to prevent multiple clicks
+                document.getElementById("send-email").disabled = true;
+    
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/save_email_content/", true);
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        console.log(response.result);
+                    }
+                };
+    
+                var formData = new FormData();
+                formData.append('email_hr_body', emailHRBody);
+    
+                xhr.send(formData);
+                close_email(); // Call close_email to hide the email text box after sending email
+                scrollToBottom(); // Scroll to the bottom after sending email
+            }
+        }
+    
+        function scrollToBottom() {
+            console.log('scrollToBottom function called');
+            var container = document.getElementById('query-history-container');
+            if (container) { // Check if container exists before attempting to scroll
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+    
+        // Call scrollToBottom() after the page is loaded
+        window.onload = function () {
+            scrollToBottom();
+        };
+    
+        const userInput = document.getElementById('user-input');
+        const submitButton = document.getElementById('submit-button');
+        const upperDiv = document.getElementById('upper-div');
+        const userInputContainer = document.getElementById('user-input-container');
+        const paddingHeight = 0;
+        const maxHeight = 150;
+    
+        userInput.addEventListener('input', function () {
+            userInput.style.height = 'auto';
+            var newHeight = Math.min(userInput.scrollHeight, maxHeight - paddingHeight);
+            if (newHeight > parseInt(userInput.style.height)) {
+                userInput.style.height = newHeight + 'px';
+                userInputContainer.style.height = userInput.style.height;
+                upperDiv.style.height = `calc(100% - ${userInputContainer.clientHeight}px)`;
+            }
+    
+            // Enable the submit button if there's text, otherwise disable it
+            submitButton.disabled = userInput.value.trim() === '';
+        });
+    
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    
+        document.addEventListener("DOMContentLoaded", function () {
+            // Add an event listener to the "Send Email" button
+            document.getElementById("send-email").addEventListener("click", function () {
+                console.log("Send Email button clicked");
+                sendEmailHR();
+            });
+        });
+        // Loader functionality
+        document.getElementById('submit-button').addEventListener('click',function(){
+            document.getElementById('loader').style.display = "block";
+        });
+        document.getElementById('user-input').addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                document.getElementById('loader').style.display = "block";
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    
+        // Capture Enter key press in textarea and submit the form
+        userInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent newline
+                if (!submitButton.disabled) {
+                    document.getElementById('user-input-form').submit(); // Submit the form
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const userInput = document.getElementById('user-input');
+            const submitButton = document.getElementById('submit-button');
+            const userInputContainer = document.getElementById('user-input-container');
+            const paddingHeight = 0;
+            const maxHeight = 150;
+
+            userInput.addEventListener('input', function () {
+                userInput.style.height = 'auto';
+                var newHeight = Math.min(userInput.scrollHeight, maxHeight - paddingHeight);
+                if (newHeight > parseInt(userInput.style.height)) {
+                    userInput.style.height = newHeight + 'px';
+                    userInputContainer.style.height = userInput.style.height;
+                }
+
+                // Enable the submit button if there's text, otherwise disable it
+                submitButton.disabled = userInput.value.trim() === '';
+                // Update the title attribute based on the button state
+                submitButton.title = submitButton.disabled ? '' : 'Submit Question';
+            });
+
+            // Capture Enter key press in textarea and submit the form
+            userInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault(); // Prevent newline
+                    if (!submitButton.disabled) {
+                        document.getElementById('user-input-form').submit(); // Submit the form
+                    }
+                }
+            });
+        });
+    
+    </script>
+
+</body>
+</html>
